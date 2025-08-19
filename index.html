@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🛒 CryptoStore - Tienda con Ethereum</title>
+  <link rel="icon" href="data:,">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { 
+      background: rgba(255,255,255,0.95); 
+      padding: 20px; 
+      border-radius: 15px; 
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+    }
+    .wallet-info { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      flex-wrap: wrap; 
+      gap: 15px;
+    }
+    .connect-btn { 
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white; 
+      border: none; 
+      padding: 12px 25px; 
+      border-radius: 25px; 
+      cursor: pointer; 
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+    }
+    .connect-btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 6px 20px rgba(255,107,107,0.4);
+    }
+    .connected { 
+      background: linear-gradient(45deg, #00b894, #00cec9) !important; 
+    }
+    .account-info { 
+      background: rgba(0,184,148,0.1); 
+      padding: 10px 15px; 
+      border-radius: 10px; 
+      font-weight: bold;
+    }
+    .products-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+      gap: 25px; 
+      margin-top: 30px;
+    }
+    .product-card { 
+      background: rgba(255,255,255,0.95); 
+      border-radius: 15px; 
+      padding: 25px; 
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    .product-card:hover { 
+      transform: translateY(-5px); 
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    .product-emoji { font-size: 60px; margin-bottom: 15px; }
+    .product-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #2d3436; }
+    .product-description { color: #636e72; margin-bottom: 15px; line-height: 1.5; }
+    .product-price { 
+      font-size: 20px; 
+      font-weight: bold; 
+      color: #00b894; 
+      margin-bottom: 20px;
+    }
+    .buy-btn { 
+      background: linear-gradient(45deg, #00b894, #00cec9);
+      color: white; 
+      border: none; 
+      padding: 12px 30px; 
+      border-radius: 25px; 
+      cursor: pointer; 
+      font-size: 16px;
+      font-weight: bold;
+      width: 100%;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,184,148,0.3);
+    }
+    .buy-btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 6px 20px rgba(0,184,148,0.4);
+    }
+    .buy-btn:disabled { 
+      background: #ddd; 
+      cursor: not-allowed; 
+      transform: none;
+      box-shadow: none;
+    }
+    .transaction-status { 
+      margin-top: 20px; 
+      padding: 15px; 
+      border-radius: 10px; 
+      text-align: center;
+      font-weight: bold;
+    }
+    .success { background: rgba(0,184,148,0.2); color: #00b894; }
+    .error { background: rgba(255,107,107,0.2); color: #ff6b6b; }
+    .loading { background: rgba(116,185,255,0.2); color: #74b9ff; }
+    .store-title { 
+      text-align: center; 
+      color: white; 
+      font-size: 48px; 
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .store-subtitle { 
+      text-align: center; 
+      color: rgba(255,255,255,0.9); 
+      font-size: 18px; 
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="store-title">🛒 CryptoStore</h1>
+    <p class="store-subtitle">Compra productos exclusivos con Ethereum</p>
+    
+    <div class="header">
+      <div class="wallet-info">
+        <div>
+          <button id="connect" class="connect-btn">🦊 Conectar MetaMask</button>
+        </div>
+        <div class="account-info">
+          <div id="account">Wallet no conectada</div>
+          <div id="balance">Balance: -- ETH</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-emoji">📱</div>
+        <div class="product-name">iPhone 15 Pro</div>
+        <div class="product-description">El último iPhone con chip A17 Pro, cámara de 48MP y diseño en titanio</div>
+        <div class="product-price">0.5 ETH</div>
+        <button class="buy-btn" onclick="buyProduct('iPhone 15 Pro', '0.5')" disabled>
+          Comprar Ahora
+        </button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-emoji">💻</div>
+        <div class="product-name">MacBook Pro M3</div>
+        <div class="product-description">Laptop profesional con chip M3, 16GB RAM y pantalla Retina de 14"</div>
+        <div class="product-price">1.2 ETH</div>
+        <button class="buy-btn" onclick="buyProduct('MacBook Pro M3', '1.2')" disabled>
+          Comprar Ahora
+        </button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-emoji">🎧</div>
+        <div class="product-name">AirPods Pro</div>
+        <div class="product-description">Auriculares inalámbricos con cancelación activa de ruido</div>
+        <div class="product-price">0.15 ETH</div>
+        <button class="buy-btn" onclick="buyProduct('AirPods Pro', '0.15')" disabled>
+          Comprar Ahora
+        </button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-emoji">⌚</div>
+        <div class="product-name">Apple Watch Ultra</div>
+        <div class="product-description">Smartwatch resistente con GPS, monitor de salud y batería de larga duración</div>
+        <div class="product-price">0.4 ETH</div>
+        <button class="buy-btn" onclick="buyProduct('Apple Watch Ultra', '0.4')" disabled>
+          Comprar Ahora
+        </button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-emoji">🎮</div>
+        <div class="product-name">PlayStation 5</div>
+        <div class="product-description">Consola de videojuegos de nueva generación con gráficos 4K</div>
+        <div class="product-price">0.3 ETH</div>
+        <button class="buy-btn" onclick="buyProduct('PlayStation 5', '0.3')" disabled>
+          Comprar Ahora
+        </button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-emoji">📷</div>
+        <div class="product-name">Canon EOS R5</div>
+        <div class="product-description">Cámara profesional mirrorless con video 8K y sensor de 45MP</div>
+        <div class="product-price">2.0 ETH</div>
+        <button class="buy-btn" onclick="buyProduct('Canon EOS R5', '2.0')" disabled>
+          Comprar Ahora
+        </button>
+      </div>
+    </div>
+
+    <div id="transaction-status"></div>
+  </div>
+
+  <script>
+    // Variables globales
+    let provider;
+    let signer;
+    let userAddress;
+    let userBalance;
+
+    // Dirección de la tienda (reemplaza con tu dirección real)
+    const STORE_ADDRESS = "0x2D8af7Eb881AA9be08f7FB38487C78fb44cA5667";
+
+    // Elementos del DOM
+    const connectButton = document.getElementById("connect");
+    const accountText = document.getElementById("account");
+    const balanceText = document.getElementById("balance");
+    const statusDiv = document.getElementById("transaction-status");
+    const buyButtons = document.querySelectorAll(".buy-btn");
+
+    // Conectar MetaMask
+    connectButton.addEventListener("click", async () => {
+      if (typeof window.ethereum !== "undefined") {
+        try {
+          showStatus("Conectando a MetaMask...", "loading");
+          
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+
+          signer = provider.getSigner();
+          userAddress = await signer.getAddress();
+          
+          // Actualizar UI
+          accountText.innerText = `Cuenta: ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+          
+          await updateBalance();
+          
+          connectButton.innerText = "✅ Conectado";
+          connectButton.classList.add("connected");
+          
+          // Habilitar botones de compra
+          buyButtons.forEach(btn => btn.disabled = false);
+          
+          showStatus("¡Wallet conectada exitosamente! 🎉", "success");
+          
+        } catch (error) {
+          console.error("Error conectando:", error);
+          showStatus("Error al conectar con MetaMask", "error");
+        }
+      } else {
+        showStatus("MetaMask no está instalado. Por favor instálalo desde metamask.io", "error");
+      }
+    });
+
+    // Actualizar balance
+    async function updateBalance() {
+      try {
+        const balance = await provider.getBalance(userAddress);
+        userBalance = ethers.utils.formatEther(balance);
+        balanceText.innerText = `Balance: ${parseFloat(userBalance).toFixed(4)} ETH`;
+      } catch (error) {
+        console.error("Error obteniendo balance:", error);
+      }
+    }
+
+    // Función para comprar producto
+    async function buyProduct(productName, priceETH) {
+      if (!signer) {
+        showStatus("Por favor conecta tu wallet primero", "error");
+        return;
+      }
+
+      try {
+        showStatus(`Procesando compra de ${productName}...`, "loading");
+
+        // Verificar balance suficiente
+        if (parseFloat(userBalance) < parseFloat(priceETH)) {
+          showStatus("Balance insuficiente para esta compra", "error");
+          return;
+        }
+
+        // Crear transacción
+        const transaction = {
+          to: STORE_ADDRESS,
+          value: ethers.utils.parseEther(priceETH),
+          gasLimit: 21000
+        };
+
+        // Enviar transacción
+        const tx = await signer.sendTransaction(transaction);
+        
+        showStatus(`Transacción enviada: ${tx.hash.slice(0,10)}... Esperando confirmación...`, "loading");
+
+        // Esperar confirmación
+        const receipt = await tx.wait();
+        
+        showStatus(`¡Compra exitosa! 🎉 ${productName} comprado por ${priceETH} ETH. Hash: ${receipt.transactionHash.slice(0,10)}...`, "success");
+        
+        // Actualizar balance
+        await updateBalance();
+        
+        // Simular envío del producto
+        setTimeout(() => {
+          showStatus(`📦 Tu ${productName} está siendo preparado para envío. ¡Gracias por tu compra!`, "success");
+        }, 3000);
+
+      } catch (error) {
+        console.error("Error en la compra:", error);
+        
+        if (error.code === 4001) {
+          showStatus("Transacción cancelada por el usuario", "error");
+        } else if (error.code === -32603) {
+          showStatus("Error de red o gas insuficiente", "error");
+        } else {
+          showStatus(`Error en la transacción: ${error.message}`, "error");
+        }
+      }
+    }
+
+    // Mostrar estado de transacción
+    function showStatus(message, type) {
+      statusDiv.innerHTML = `<div class="transaction-status ${type}">${message}</div>`;
+      
+      // Auto-limpiar después de 10 segundos para mensajes de éxito
+      if (type === "success") {
+        setTimeout(() => {
+          statusDiv.innerHTML = "";
+        }, 10000);
+      }
+    }
+
+    // Detectar cambios de cuenta en MetaMask
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length === 0) {
+          // Usuario desconectó
+          connectButton.innerText = "🦊 Conectar MetaMask";
+          connectButton.classList.remove("connected");
+          accountText.innerText = "Wallet no conectada";
+          balanceText.innerText = "Balance: -- ETH";
+          buyButtons.forEach(btn => btn.disabled = true);
+          showStatus("Wallet desconectada", "error");
+        } else {
+          // Cambió de cuenta
+          location.reload();
+        }
+      });
+
+      window.ethereum.on('chainChanged', () => {
+        location.reload();
+      });
+    }
+  </script>
+</body>
+</html>
